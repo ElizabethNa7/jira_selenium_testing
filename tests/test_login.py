@@ -6,21 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-
+from fixtures.driver_setup import driver
 import time
-
-# Define a Pytest fixture for browser setup
-@pytest.fixture
-def driver():
-    # Set up Chrome WebDriver
-    service = Service(executable_path="/Users/elizabeth-na/Downloads/chromedriver-mac-x64/chromedriver") 
-    
-    # Open a webpage
-    driver = webdriver.Chrome(service=service)
-    # driver.maximize_window()
-    yield driver  # Provide the driver to the test
-    driver.quit()  # Quit the browser after the test
-
 
 # Test case: Open Jira and verify the login popup
 def test_jira_login(driver):
@@ -62,16 +49,11 @@ def test_jira_login(driver):
     )
     profile_button.click()
 
-    # Locate the profile name element by class
     profile = driver.find_element(By.CLASS_NAME, "_vwz4gktf")
-
     actual_profile = profile.text
     expected_profile = "Elizabeth Na"
-    # assert actual_profile == expected_profile, f"Expected profile '{expected_profile}', but '{actual_profile}' is logged in!"
+    
     assert actual_profile == actual_profile, \
         "Expected profile '{expected_profile}', but '{actual_profile}' is logged in!"
-
-    time.sleep(3)
-    driver.quit()
-
-    # Testing321! jk
+    
+    # Testing321! for optional testing profile
