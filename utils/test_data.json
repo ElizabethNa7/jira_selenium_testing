@@ -1,0 +1,25 @@
+{
+    "login": {
+      "valid_user": {
+        "username": "elizabeth.na@hcltech.com",
+        "password": "LizziE2869950."
+      },
+      "invalid_user": {
+        "username": "madeupemail@gmail.com",
+        "password": "wrongpassword"
+      }
+    },
+    "tasks": {
+      "task_1": {
+        "title": "Bug fix",
+        "description": "Fix login bug",
+        "priority": "High"
+      },
+      "task_2": {
+        "title": "Add feature",
+        "description": "Implement user authentication",
+        "priority": "Medium"
+      }
+    }
+  }
+  

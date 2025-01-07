@@ -1,0 +1,1 @@
+# makes the fixtures folder recognized as a python package

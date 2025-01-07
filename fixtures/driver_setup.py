@@ -2,7 +2,7 @@ import pytest
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
-# Define a Pytest fixture for browser setup
+# Pytest fixture for browser setup, to be used across multiple tests
 @pytest.fixture
 def driver():
     # Set up Chrome WebDriver
