@@ -9,6 +9,9 @@
         "password": "wrongpassword"
       }
     },
+    "profile": {
+      "name": "Elizabeth Na"
+    },
     "tasks": {
       "task_1": {
         "title": "Bug fix",

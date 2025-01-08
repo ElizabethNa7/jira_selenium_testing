@@ -6,7 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from fixtures.driver_setup import driver
+# from fixtures.driver_setup import driver
+from conftest import driver
 import time
 
 # Test case: Open Jira and verify the login popup
