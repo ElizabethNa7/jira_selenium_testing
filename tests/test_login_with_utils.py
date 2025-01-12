@@ -6,6 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
+
 from conftest import driver
 from utils.json_helper import load_test_data
 
@@ -14,10 +16,9 @@ import time
 # Load JSON test data
 test_data = load_test_data("utils/test_data.json")
 config = load_test_data("utils/config.json")
-print(f"test_data: {test_data} and config: {config}")
 
 # Test case: Open Jira and verify the login popup
-def test_jira_task(driver):
+def test_jira_login(driver):
     # Open Jira website
     # driver.get("https://jira-selenium-test.atlassian.net/jira/your-work")
     driver.get(config["base_url"])
@@ -32,6 +33,15 @@ def test_jira_task(driver):
     assert driver.title == "Your work - Jira" or "Log in to continue - Log in with Atlassian account", \
         "The homepage did not load as expected!"
 
+    # login_button = driver.find_element(By.ID,"google-auth-button")
+    # login_button.click()
+
+    # actions = ActionChains(driver)
+    # actions.send_keys(test_data["login"]["valid_user"]["username"] + Keys.ENTER).perform()
+    # time.sleep(2)
+    # actions.send_keys(test_data["login"]["valid_user"]["password"] + Keys.ENTER).perform()
+
+
     # Login
     login_button = driver.find_element(By.CLASS_NAME,"css-1kxou5n")
     login_button.click()
@@ -42,8 +52,33 @@ def test_jira_task(driver):
     actions = ActionChains(driver)
     actions.send_keys(test_data["login"]["valid_user"]["password"] + Keys.ENTER).perform()
 
+    # check for/handle two step verification page
+    # try:
+
+    try:
+        product_discovery_popup = WebDriverWait(driver, 15).until(
+            EC.presence_of_element_located((By.CLASS_NAME, test_data["popups"]["product_discovery"]["identifier"]))
+        )
+        triple_dot_menu = WebDriverWait(driver, 3).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, test_data["popups"]["product_discovery"]["menu"]))
+        )
+        triple_dot_menu.click()
+        not_interested = driver.find_element(By.CSS_SELECTOR, test_data["popups"]["product_discovery"]["exit"])
+        not_interested.click()
+        time.sleep(5)
+
+    except TimeoutException:
+        print("no popup, continuing...")
+    except StaleElementReferenceException:
+        print("Encountered stale element, retrying...")
+        triple_dot_menu = driver.find_element(By.CSS_SELECTOR, ".css-652a00 .css-1afrefi")
+        triple_dot_menu.click()
+
+# except TimeoutException:
+#     print("no service management popup, continuing")
+
    # check correct profile is logged in
-    profile_button = WebDriverWait(driver, 5).until( 
+    profile_button = WebDriverWait(driver, 15).until( 
         EC.presence_of_element_located((By.ID,"atlassian-navigation.ui.profile.icon")) # this wasn't/doesn't work bc the password field is lowkey the same as the username, but that original one is also stale by this point
     )
     profile_button.click()

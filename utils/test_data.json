@@ -23,6 +23,13 @@
         "description": "Implement user authentication",
         "priority": "Medium"
       }
+    },
+    "popups": {
+      "product_discovery": {
+        "identifier": "css-1of3wbn",
+        "menu": ".css-652a00 .css-1afrefi",
+        "exit": "css=.css-8ut1ye:nth-child(1) .css-1dq7sg"
+      }
     }
   }
   
