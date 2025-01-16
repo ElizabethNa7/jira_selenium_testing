@@ -1,0 +1,36 @@
+name: CI for Selenium Tests
+
+on:
+  push:
+    branches:
+      - main  # Triggers the workflow when changes are pushed to the main branch
+
+jobs:
+  test:
+    runs-on: ubuntu-latest  # Use an Ubuntu runner for the workflow
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3  # Checks out your repository's code
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.8"  # Adjust Python version to match your project
+
+    - name: Install Dependencies
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Run Tests and Generate Report
+      run: |
+        source venv/bin/activate
+        pytest tests/ --junitxml=report.xml  # Generate a JUnit-style test report
+
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: report.xml
