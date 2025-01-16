@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 
 # Pytest fixture for browser setup, to be used across multiple tests
-@pytest.fixture
+@pytest.fixture(scope="session")
 def driver():
     # Set up Chrome WebDriver
     service = Service(executable_path="/Users/elizabeth-na/Downloads/chromedriver-mac-x64/chromedriver") 
