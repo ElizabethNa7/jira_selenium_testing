@@ -20,14 +20,12 @@ jobs:
 
     - name: Install Dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Run Tests and Generate Report
       run: |
-        source venv/bin/activate
-        pytest tests/ --junitxml=report.xml  # Generate a JUnit-style test report
+        pytest tests/ --junitxml=report.xml # Generate a JUnit-style test report
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v3
