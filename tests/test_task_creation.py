@@ -18,6 +18,7 @@ import time
 test_data = load_test_data("utils/test_data.json")
 config = load_test_data("utils/config.json")
 
+@pytest.mark.dependency(depends=["login"])
 @pytest.fixture(scope="session")
 def test_create_task(driver):
     assert "Your work - Jira" in driver.title, "Not on 'Your work - Jira' homepage"

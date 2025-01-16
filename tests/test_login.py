@@ -1,6 +1,7 @@
 import pytest
 # from conftest import login
 
+@pytest.mark.dependency(name="login")
 def test_login(test_jira_login):
     assert test_jira_login is None, "Login fixture should log in the user without issues."
 
