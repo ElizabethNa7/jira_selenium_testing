@@ -22,6 +22,10 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    
+    - name: Create test_data.json
+      run: |
+        echo "${{ secrets.TEST_DATA }}" > utils/test_data.json
 
     - name: Run Tests and Generate Report
       run: |
