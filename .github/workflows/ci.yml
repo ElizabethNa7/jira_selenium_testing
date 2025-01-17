@@ -25,28 +25,45 @@ jobs:
     
     - name: Install Chrome and ChromeDriver
       run: |
-        # Update package lists and install prerequisites
-        sudo apt-get update
-        sudo apt-get install -y wget unzip apt-transport-https
+        set -e  # Exit on error to make issues visible in logs
     
-        # Download and install Google Chrome
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i google-chrome-stable_current_amd64.deb || true  # Allow errors for dependency resolution
-        sudo apt-get -f install -y  # Fix missing dependencies if any
+        # Update package lists and install prerequisites
+        echo "Updating package lists..."
+        sudo apt-get update -y
+        sudo apt-get install -y wget unzip apt-transport-https || { echo "Failed to install prerequisites"; exit 1; }
+    
+        # Download Google Chrome .deb file
+        echo "Downloading Google Chrome..."
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || { echo "Failed to download Google Chrome"; exit 1; }
+    
+        # Install Google Chrome
+        echo "Installing Google Chrome..."
+        sudo dpkg -i google-chrome-stable_current_amd64.deb || { echo "dpkg encountered an issue, attempting to fix..."; sudo apt-get -f install -y; }
     
         # Verify Chrome installation
-        google-chrome --version || { echo "Chrome installation failed"; exit 1; }
+        echo "Verifying Google Chrome installation..."
+        google-chrome --version || { echo "Google Chrome installation failed"; exit 1; }
+    
+        # Get installed Chrome version
+        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        echo "Installed Chrome version: $CHROME_VERSION"
     
         # Fetch and install the appropriate ChromeDriver version
-        CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
+        echo "Downloading ChromeDriver for Chrome version $CHROME_VERSION..."
         CHROMEDRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-        wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
-        unzip chromedriver_linux64.zip
+        if [ -z "$CHROMEDRIVER_VERSION" ]; then
+          echo "Failed to fetch ChromeDriver version for Chrome $CHROME_VERSION"
+          exit 1
+        fi
+        wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" || { echo "Failed to download ChromeDriver"; exit 1; }
+        unzip chromedriver_linux64.zip || { echo "Failed to unzip ChromeDriver"; exit 1; }
         sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
     
         # Verify ChromeDriver installation
+        echo "Verifying ChromeDriver installation..."
         chromedriver --version || { echo "ChromeDriver installation failed"; exit 1; }
+      shell: bash
 
     - name: Create test_data.json
       run: |
