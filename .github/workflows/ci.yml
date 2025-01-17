@@ -7,27 +7,38 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use an Ubuntu runner for the workflow
+    runs-on: ubuntu-latest  # Use Ubuntu runner for workflow
 
     steps:
+    - name: Enable Debug Mode
+      run: echo "RUNNER_DEBUG=true" >> $GITHUB_ENV
+      
     - name: Checkout Code
-      uses: actions/checkout@v3  # Checks out your repository's code
+      uses: actions/checkout@v3  # Check out repository code
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.8"  # Adjust Python version to match your project
+        python-version: "3.8"
 
     - name: Install Dependencies
       run: |
-        python -m venv venv
-        source venv/bin/activate
+        python -m pip install --upgrade pip
         pip install -r requirements.txt
+
+    - name: Create test_data.json
+      run: |
+        echo "${{ secrets.TEST_DATA }}" | base64 --decode > utils/test_data.json
+
+    - name: Verify Pre-installed Chrome and ChromeDriver
+      run: |
+        google-chrome --version
+        chromedriver --version
 
     - name: Run Tests and Generate Report
       run: |
-        source venv/bin/activate
-        pytest tests/ --junitxml=report.xml  # Generate a JUnit-style test report
+        export PYTHONPATH="$PWD:$PYTHONPATH"
+        pytest tests/ --junitxml=report.xml --disable-warnings  # Generate a JUnit-style test report
 
     - name: Upload Test Report
       uses: actions/upload-artifact@v3
