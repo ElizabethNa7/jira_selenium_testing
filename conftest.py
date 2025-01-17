@@ -1,4 +1,5 @@
 import pytest
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -6,6 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
 from utils.json_helper import load_test_data
 import time
@@ -16,14 +18,23 @@ config = load_test_data("utils/config.json")
 # Pytest fixture for browser setup, to be used across multiple tests
 @pytest.fixture(scope="session")
 def driver():
-    # Set up Chrome WebDriver
-    service = Service(executable_path="/Users/elizabeth-na/Downloads/chromedriver-mac-x64/chromedriver") 
+    # Set up Chrome WebDriver with automatic driver management
+    options = Options()
+    options.headless = True
+    service = Service(ChromeDriverManager().install())  # Automatically install and locate the right version of ChromeDriver
+
+    driver = webdriver.Chrome(service=service, options=options)
+    yield driver
+    driver.quit()
     
-    # Open a webpage
-    driver = webdriver.Chrome(service=service)
-    # driver.maximize_window()
-    yield driver  # Provide the driver to the test
-    driver.quit()  # Quit the browser after the test
+    # # Set up Chrome WebDriver - hardcoded path, works locally
+    # service = Service(executable_path="/Users/elizabeth-na/Downloads/chromedriver-mac-x64/chromedriver") 
+    
+    # # Open a webpage
+    # driver = webdriver.Chrome(service=service)
+    # # driver.maximize_window()
+    # yield driver  # Provide the driver to the test
+    # driver.quit()  # Quit the browser after the test
 
 
 @pytest.fixture(scope="session")
