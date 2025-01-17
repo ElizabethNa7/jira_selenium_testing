@@ -3,9 +3,13 @@ import json
 import os
 
 def load_test_data(test_data):
-    with open(test_data, 'r') as file:
+    if not os.path.exists(test_data):
+        raise FileNotFoundError(f"{test_data} not found")
+    try:
+        with open(test_data, 'r') as file:
             return json.load(file)
-    test_data = load_test_data('utils/test_data.json')
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in {test_data}: {e}")
     # print(test_data['login']['valid_user']['username'])  # Output: valid_user
 
     # Get the absolute path of the current script (json_helper.py)
