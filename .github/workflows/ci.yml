@@ -10,6 +10,10 @@ jobs:
     runs-on: ubuntu-latest  # Use Ubuntu runner for workflow
 
     steps:
+    - name: Enable Debug Mode
+      run: echo "RUNNER_DEBUG=true" >> $GITHUB_ENV
+
+    
     - name: Checkout Code
       uses: actions/checkout@v3  # Check out repository code
 
@@ -25,44 +29,50 @@ jobs:
     
     - name: Install Chrome and ChromeDriver
       run: |
-        set -e  # Exit on error to make issues visible in logs
-    
-        # Update package lists and install prerequisites
-        echo "Updating package lists..."
+        set -e  # Exit immediately if a command exits with a non-zero status
+        
+        # Update packages and install prerequisites
+        echo "Updating packages and installing prerequisites..."
         sudo apt-get update -y
         sudo apt-get install -y wget unzip apt-transport-https || { echo "Failed to install prerequisites"; exit 1; }
     
-        # Download Google Chrome .deb file
-        echo "Downloading Google Chrome..."
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || { echo "Failed to download Google Chrome"; exit 1; }
+        # Download the Google Chrome .deb file
+        echo "Downloading Google Chrome .deb file..."
+        wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb || { echo "Failed to download Google Chrome .deb file"; exit 1; }
     
         # Install Google Chrome
         echo "Installing Google Chrome..."
-        sudo dpkg -i google-chrome-stable_current_amd64.deb || { echo "dpkg encountered an issue, attempting to fix..."; sudo apt-get -f install -y; }
+        sudo dpkg -i google-chrome-stable_current_amd64.deb || { echo "dpkg installation encountered an issue, attempting to fix..."; sudo apt-get -f install -y; }
     
         # Verify Chrome installation
         echo "Verifying Google Chrome installation..."
-        google-chrome --version || { echo "Google Chrome installation failed"; exit 1; }
+        if ! google-chrome --version; then
+          echo "Google Chrome installation verification failed."
+          exit 1
+        fi
+        echo "Google Chrome installed successfully."
     
-        # Get installed Chrome version
+        # Fetch the installed Chrome version
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
         echo "Installed Chrome version: $CHROME_VERSION"
     
-        # Fetch and install the appropriate ChromeDriver version
+        # Download the exact matching ChromeDriver version
         echo "Downloading ChromeDriver for Chrome version $CHROME_VERSION..."
-        CHROMEDRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
-        if [ -z "$CHROMEDRIVER_VERSION" ]; then
-          echo "Failed to fetch ChromeDriver version for Chrome $CHROME_VERSION"
-          exit 1
-        fi
-        wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" || { echo "Failed to download ChromeDriver"; exit 1; }
-        unzip chromedriver_linux64.zip || { echo "Failed to unzip ChromeDriver"; exit 1; }
+        CHROMEDRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION") || { echo "Failed to fetch the ChromeDriver version"; exit 1; }
+        wget -q "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip" || { echo "Failed to download ChromeDriver"; exit 1; }
+    
+        # Install ChromeDriver
+        echo "Installing ChromeDriver..."
+        unzip chromedriver_linux64.zip
         sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
     
         # Verify ChromeDriver installation
-        echo "Verifying ChromeDriver installation..."
-        chromedriver --version || { echo "ChromeDriver installation failed"; exit 1; }
+        if ! chromedriver --version; then
+          echo "ChromeDriver installation verification failed."
+          exit 1
+        fi
+        echo "ChromeDriver installed successfully."
       shell: bash
 
     - name: Create test_data.json
