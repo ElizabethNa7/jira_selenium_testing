@@ -25,7 +25,7 @@ jobs:
     
     - name: Create test_data.json
       run: |
-        echo "${{ secrets.TEST_DATA }}" > utils/test_data.json
+        echo "${{ secrets.TEST_DATA_JSON }}" | base64 --decode > utils/test_data.json
 
     - name: Run Tests and Generate Report
       run: |
