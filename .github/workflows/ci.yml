@@ -25,18 +25,28 @@ jobs:
     
     - name: Install Chrome and ChromeDriver
       run: |
+        # Update package lists and install prerequisites
         sudo apt-get update
-        sudo apt-get install -y wget unzip
-        # Install Chrome
+        sudo apt-get install -y wget unzip apt-transport-https
+    
+        # Download and install Google Chrome
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo dpkg -i google-chrome-stable_current_amd64.deb || sudo apt-get -f install -y || true
-        # Install ChromeDriver
+        sudo dpkg -i google-chrome-stable_current_amd64.deb || true  # Allow errors for dependency resolution
+        sudo apt-get -f install -y  # Fix missing dependencies if any
+    
+        # Verify Chrome installation
+        google-chrome --version || { echo "Chrome installation failed"; exit 1; }
+    
+        # Fetch and install the appropriate ChromeDriver version
         CHROME_VERSION=$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')
         CHROMEDRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION")
         wget "https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip"
         unzip chromedriver_linux64.zip
         sudo mv chromedriver /usr/local/bin/
         sudo chmod +x /usr/local/bin/chromedriver
+    
+        # Verify ChromeDriver installation
+        chromedriver --version || { echo "ChromeDriver installation failed"; exit 1; }
 
     - name: Create test_data.json
       run: |
