@@ -1,3 +1,4 @@
+import json
 import pytest
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
@@ -9,6 +10,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, StaleElementReferenceException
+from selenium.webdriver.chrome.options import Options
+
 from utils.json_helper import load_test_data
 import time
 
@@ -18,12 +21,19 @@ config = load_test_data("utils/config.json")
 # Pytest fixture for browser setup, to be used across multiple tests
 @pytest.fixture(scope="session")
 def driver():
-    # Set up Chrome WebDriver with automatic driver management
     options = Options()
-    options.headless = True
-    service = Service(ChromeDriverManager().install())  # Automatically install and locate the right version of ChromeDriver
+    options.headless = False  # Avoid headless mode for bot detection
+    options.add_argument("start-maximized")  # Open browser in full screen
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36")  # Fake a user agent
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])  # Remove "Chrome is being controlled by automated software"
+    options.add_experimental_option("useAutomationExtension", False)
 
+    service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
+    driver.execute_cdp_cmd("Network.setUserAgentOverride", {
+        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
+    })
+
     yield driver
     driver.quit()
     
@@ -53,10 +63,18 @@ def test_jira_login(driver):
     #     f"Unexpected page title: {driver.title}"
 
     # if driver.title != "Log in to continue - Log in with Atlassian account":
-    #     pytest.fail("Error: Page failed to load or an account is already logged in.")
+    #     pytest.fail("Error: Page failed to load or an account is already logged in.") 
     # else:
-    login_button = driver.find_element(By.CLASS_NAME,"css-1kxou5n")
-    login_button.click()
+    
+    # profile_button = WebDriverWait(driver, 2).until(   username-container
+    #         EC.presence_of_element_located((By.ID,"atlassian-navigation.ui.profile.icon")) # this wasn't/doesn't work bc the password field is lowkey the same as the username, but that original one is also stale by this point
+    #     )
+    #     profile_button.click()
+
+
+    # email_input = driver.find_element(By.XPATH, "//input[@id='username' or @data-testid='username']")
+    # email_input.click()  # Click inside the input field
+
     
     username_field = driver.find_element(By.ID, "username")
     username_field.send_keys(test_data["login"]["valid_user"]["username"] + Keys.ENTER)
@@ -76,6 +94,12 @@ def test_jira_login(driver):
         print("no two-step verification page, continuing...")
 
     home_page = WebDriverWait(driver, 15).until(EC.title_is("Your work - Jira"))
+    
+    # Save cookies to a file
+    cookies = driver.get_cookies()
+    with open("cookies.json", "w") as cookie_file:
+        json.dump(cookies, cookie_file)
+
 
     try: # TODO: probably just change this to an if-then
         product_discovery_popup = WebDriverWait(driver, 2).until(
@@ -85,7 +109,7 @@ def test_jira_login(driver):
             EC.element_to_be_clickable((By.CSS_SELECTOR, test_data["popups"]["product_discovery"]["menu"]))
         )
         triple_dot_menu.click()
-        not_interested = driver.find_element(By.CSS_SELECTOR, test_data["popups"]["product_discovery"]["exit"])
+        not_interested = driver.find_element(By.CSS_SELECTOR, test_data["popups"]["product_discovery"]["close"])
         not_interested.click()
         # time.sleep(5)
 
@@ -95,12 +119,23 @@ def test_jira_login(driver):
         print("Encountered stale element, retrying...")
         triple_dot_menu = driver.find_element(By.CSS_SELECTOR, ".css-652a00 .css-1afrefi")
         triple_dot_menu.click()
+    
+    # try:
+    #     other_popup = WebDriverWait(driver, 2).until(
+    #         EC.presence_of_element_located((By.CLASS_NAME, "css-1y22fjq"))
+    #     )
+    #     exit_button = WebDriverWait(driver, 2).until(
+    #             EC.element_to_be_clickable((By.CSS_SELECTOR, test_data["popups"]["close"]))
+    #         )
+    #     exit_button.click()
+    # except TimeoutException:
+    #     print("no popup, continuing...")
 
     # except TimeoutException:
     #     print("no service management popup, continuing")
 
     # check correct profile is logged in
-        profile_button = WebDriverWait(driver, 2).until( 
+        profile_button = WebDriverWait(driver, 2).until(   
             EC.presence_of_element_located((By.ID,"atlassian-navigation.ui.profile.icon")) # this wasn't/doesn't work bc the password field is lowkey the same as the username, but that original one is also stale by this point
         )
         profile_button.click()
